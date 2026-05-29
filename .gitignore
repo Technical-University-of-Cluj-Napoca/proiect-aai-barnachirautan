@@ -1,0 +1,15 @@
+.env
+
+data/repos/
+vectorstore/
+memory/feedback_index/
+memory/feedback_store.json
+logs/
+
+
+.venv/
+
+notebooks/.ipynb_checkpoints/
+.ipynb_checkpoints/
+
+.langchain.db
