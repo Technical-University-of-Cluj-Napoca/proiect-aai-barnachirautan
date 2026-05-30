@@ -198,8 +198,7 @@ def parse_dep_file(path: Path) -> list[str]:
         for line in path.read_text(encoding="utf-8").splitlines():
             line = line.strip()
             if line and not line.startswith('#'):
-                dep = re.split(r'[>=<!]', line)[0].strip()
-                deps.append(dep)
+                deps.append(line)
     elif path.name == "package.json":
         data = json.loads(path.read_text(encoding='utf-8'))
         deps = list(data.get("dependencies", {}).keys())
@@ -259,7 +258,8 @@ class CodeParserAgent:
             local_path=local_path,
             files=code_filesDTO,
             total_loc=sum(f.lines_of_code for f in code_filesDTO),
-            languages=list(set(f.language for f in code_filesDTO))
+            languages=list(set(f.language for f in code_filesDTO)),
+            dep_packages = dep_filesDTO
         )
 
 

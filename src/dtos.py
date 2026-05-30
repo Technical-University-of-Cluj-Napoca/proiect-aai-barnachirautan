@@ -49,6 +49,7 @@ class RepositoryDTO(BaseModel):
     files: list[CodeFileDTO]
     total_loc: int
     languages: list[Language]
+    dep_packages: list[str] # sa am pt verificarea versiunilor
 
 class VulnerabilityDTO(BaseModel):
     id: str
