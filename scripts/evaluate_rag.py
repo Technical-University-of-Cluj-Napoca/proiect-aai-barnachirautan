@@ -27,6 +27,8 @@ collection = client.get_collection("security_corpus")
 embeddings = OpenAIEmbeddings(model="text-embedding-3-small")
 llm = ChatOpenAI(model="gpt-4o-mini")
 
+# NU MERGE VERSIUNEA DE RAGAS, NIMIC, am TOT INCERCAT, nimic, ceva scor manual, dar pe ex raspune bine...
+# RECUNOSC, FACUTA DE ALTCNV.................
 results = []
 for question in questions:
     vector = embeddings.embed_query(question)

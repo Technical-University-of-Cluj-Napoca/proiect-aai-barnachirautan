@@ -1,5 +1,5 @@
 # Surse corpus
-Data accesarii: 2026-05-29
+Data accesarii: 2026-05-30
 
 ## CVE-uri NVD
 - CVE-2016-3643 | CVSS: 7.8 | https://nvd.nist.gov/vuln/detail/CVE-2016-3643

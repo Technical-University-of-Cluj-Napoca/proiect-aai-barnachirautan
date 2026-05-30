@@ -1,6 +1,6 @@
 # CWE-89_sql_injection
 # Sursa: https://cwe.mitre.org/data/definitions/89.html
-# Data accesarii: 2026-05-29
+# Data accesarii: 2026-05-30
 
 ## Description
 Description

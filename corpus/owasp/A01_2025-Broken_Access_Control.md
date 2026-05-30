@@ -1,6 +1,6 @@
 # A01_2025-Broken_Access_Control
 # Sursa: https://owasp.org/Top10/2025/A01_2025-Broken_Access_Control/
-# Data accesarii: 2026-05-29
+# Data accesarii: 2026-05-30
 
 A01:2025 Broken Access Control
 Background.

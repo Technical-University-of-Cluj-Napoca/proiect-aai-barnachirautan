@@ -7,7 +7,7 @@ from bs4 import BeautifulSoup
 from datetime import date
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
-from src.tools.vector_tools import load_corpus, build_index
+from src.tools.vector_tools import load_corpus, build_index # apare subliniat cu rosu dar merge....
 import chromadb
 
 load_dotenv()

@@ -1,6 +1,6 @@
 # A03_2025-Software_Supply_Chain_Failures
 # Sursa: https://owasp.org/Top10/2025/A03_2025-Software_Supply_Chain_Failures/
-# Data accesarii: 2026-05-29
+# Data accesarii: 2026-05-30
 
 A03:2025 Software Supply Chain Failures
 Background.
