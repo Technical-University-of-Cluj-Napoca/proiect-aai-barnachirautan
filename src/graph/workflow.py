@@ -6,7 +6,8 @@ import logging
 from typing import TypedDict, Optional
 from datetime import datetime
 
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
+# PENTRU A RULA CU python DIN FOLDER U RADACINA
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../..")))
 from langgraph.graph import StateGraph, END
 from src.dtos import (
     RepositoryDTO, VulnerabilityDTO, CodeSmellDTO,
@@ -19,9 +20,9 @@ from src.agents.feedback_agent import SelfImprovingFeedbackAgent
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
-MAX_ITER = 10
+MAX_ITER = 3
 
-parser_repo = CodeParserAgent()
+parser_agent = CodeParserAgent()
 security_agent = RAGSecurityAgent()
 quality_agent = CodeQualityAgent()
 feedback_agent = SelfImprovingFeedbackAgent()
@@ -32,15 +33,57 @@ class WorkFlowState(TypedDict):
     context_map: dict[str, list[RetrievalResultDTO]]
     security_map: dict[str, list[VulnerabilityDTO]]
     quality_map: dict[str, list[CodeSmellDTO]]
-    feedback_context: dict[str, list[FeedbackDTO]]
+    feedback_context: dict[str, str]
     critical_alert: bool
     report: ReviewReportDTO
     report_path: str
     iteration: int
 
 def parse_repo(state: WorkFlowState) -> dict:
-    repo = parser_repo.parse(state["repo_url"])
+    start = time.time()
+    repo = parser_agent.parse(state["repo_url"])
+    logger.info(f"[parse_repo] {len(repo.files)} fisiere in {time.time() - start:.2f}s")
     return {"repository": repo}
+
+# cauta similaritate
+def augment_with_memory(state: WorkFlowState) -> dict:
+    start = time.time()
+    feedback = {}
+    for f in state['repository'].files:
+        nota = feedback_agent.augment_context(f.content[:500])
+        if nota:
+            feedback[f.file_path] = nota
+    logger.info(f"[augment_with_memory] {len(feedback)} fisiere cu feedback in {time.time() - start:.2f}s")
+    return {"feedback_context": feedback}
+
+def security_scan(state: WorkFlowState) -> dict:
+    start = time.time()
+    # la fiecare iterare dorim sa cautam si mai mult, dupa fiecare iteratie, devine si mai complex,
+    # pentru a gasii solutia
+    k = 5 + state['iteration'] * 2
+    security_map = {}
+    for f in state['repository'].files:
+        vulns = security_agent.scan(f, k=k)
+        security_map[f.file_path] = vulns
+    total_vulns = sum(len(v) for v in security_map.values())
+    logger.info(f"[security_scan] iteratia {state['iteration']} k={k} → {total_vulns} vulnerabilitati in {time.time() - start:.2f}s")
+    return {"security_map": security_map, "iteration": state["iteration"] + 1}
+
+
+def quality_check(state: WorkFlowState) -> dict:
+    start = time.time()
+    quality_map = {}
+    for f in state["repository"].files:
+        dtos, score = quality_agent.evaluate(f)
+        quality_map[f.file_path] = dtos
+    total_smells = sum(len(v) for v in quality_map.values())
+    logger.info(f"[quality_check] {total_smells} code smells in {time.time() - start:.2f}s")
+    return {"quality_map": quality_map}
+
+# nu modifica starea, decide_next face decizia
+def coverage_check_node(state: WorkFlowState) -> dict:
+    return {}
+
 
 def flag_critical(state : WorkFlowState) -> dict:
     critical = False
@@ -121,8 +164,8 @@ def build_graph():
 
     graph.add_node("parse_repo", parse_repo)
     graph.add_node("augmented_memory", augment_with_memory)
-    graph.add_node("security_scan", security_agent)
-    graph.add_node("quality_check", quality_agent)
+    graph.add_node("security_scan", security_scan)
+    graph.add_node("quality_check", quality_check)
     graph.add_node("coverage_check_node", coverage_check_node)
     graph.add_node("flag_critical", flag_critical)
     graph.add_node("generate_report", generate_report)
@@ -138,14 +181,24 @@ def build_graph():
         decide_next,  # decide
         {
             "security_scan": "security_scan",
-            "flag_critical": "generate_report"
+            "flag_critical": "flag_critical"
         }
     )
 
     graph.add_edge("flag_critical", "generate_report")
     graph.add_edge("generate_report", END)
+    compiled = graph.compile()
 
-    return graph.compile()
+    try:
+        png = compiled.get_graph().draw_mermaid_png()
+        os.makedirs("logs", exist_ok=True)
+        with open("logs/workflow_graph.png", "wb") as f:
+            f.write(png)
+        logger.info("Diagrama exportata: logs/workflow_graph.png")
+    except Exception as e:
+        logger.warning(f"Nu s-a putut exporta diagrama: {e}")
+
+    return compiled
 
 
 if __name__ == "__main__":
@@ -153,7 +206,7 @@ if __name__ == "__main__":
 
     # starea initiala
     initial_state = {
-        "repo_url": "https://github.com/pallets/flask",
+        "repo_url": "https://github.com/pallets/click",
         "repository": None,
         "context_map": {},
         "security_map": {},
@@ -165,7 +218,6 @@ if __name__ == "__main__":
         "iteration": 0
     }
 
-    # ruleaza graful
     result = app.invoke(initial_state)
     print(f"Critical alert: {result['critical_alert']}")
     print(f"Raport salvat: {result['report_path']}")

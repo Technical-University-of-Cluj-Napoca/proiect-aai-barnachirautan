@@ -149,6 +149,18 @@ def manipulate_dependency(deps : list[str], file_path: str, embeddings : OpenAIE
                     continue
     return vulnerabilities
 
+SEVERITY_MAP = {
+    "CRITICAL": "CRITIC",
+    "HIGH": "RIDICAT",
+    "MEDIUM": "MEDIU",
+    "LOW": "SCAZUT",
+    "INFO": "INFO",
+    "CRITIC": "CRITIC",
+    "RIDICAT": "RIDICAT",
+    "MEDIU": "MEDIU",
+    "SCAZUT": "SCAZUT",
+}
+
 
 class RAGSecurityAgent:
 
@@ -215,12 +227,14 @@ class RAGSecurityAgent:
             })
             for item in result:
                 try:
+                    severity_raw = item.get("severity", "MEDIU")
+                    severity = SEVERITY_MAP.get(severity_raw.upper(), "MEDIU")
                     vuln = VulnerabilityDTO(
                         id=f"SEC-{len(vulnerabilities):03d}",
                         issue_type=IssueType(item.get("issue_type", "SECURITY_VULN")),
                         title=item.get("title", ""),
                         description=item.get("description", ""),
-                        severity=VulnerabilitySeverity(item.get("severity", "MEDIU")),
+                        severity=VulnerabilitySeverity(severity),
                         file_path=file_dto.file_path,
                         line_number=item.get("line_number"),
                         affected_snippet=item.get("affected_snippet"),
