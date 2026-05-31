@@ -6,12 +6,14 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")
 # RUN DIN TERMINAL CA SA MEARGA CALEA SI CA SA NU FIE RULAT CA SI FISIER TEST
 
 from src.agents.parser_agent import CodeParserAgent
+from src.agents.quality_agent import CodeQualityAgent, generate_distribution
 
 repos = [
-    "https://github.com/django/django",
-    "https://github.com/WebGoat/WebGoat",
+    "https://github.com/pallets/flask",
+    "https://github.com/nodejs/node-gyp",
 ]
 
+quality_agent = CodeQualityAgent()
 for url in repos:
     print(f"\nIncepe testarea pentru: {url}")
     agent = CodeParserAgent()
@@ -25,6 +27,15 @@ for url in repos:
     print("\nPrimele 3 fisiere:")
     for f in repo_dto.files[:3]:
         print(f"  {f.file_path} | {f.language} | {f.lines_of_code} linii | {len(f.functions)} functii")
+
+    all_smells = []
+    for file_dto in repo_dto.files:
+        smells, score = quality_agent.evaluate(file_dto)
+        all_smells.extend(smells)
+        if smells:
+            print(f"  {file_dto.file_path} | score: {score:.1f} | smells: {len(smells)}")
+    print(f"\nTotal smells: {len(all_smells)}")
+    generate_distribution(all_smells, f"logs/distribution_{url.split('/')[-1]}.png")  # per repo
 
     with open("./data/review_exemplu.json", "w", encoding="utf-8") as out:
         json.dump(repo_dto.model_dump(), out, indent=2, ensure_ascii=False)
