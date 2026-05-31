@@ -15,6 +15,7 @@ today = date.today().isoformat()
 # https://nvd.nist.gov/developers/vulnerabilities
 # https://owasp.org/Top10/2025/
 
+# RULEAZA DIN MAIN DIR TERMINAL
 
 def filter_cvss(cves: list, min_score: float = 7.0, limit: int = 4):
     res = []
@@ -75,7 +76,7 @@ for cve in all_cve:
         score = cve["cve"]["metrics"]["cvssMetricV31"][0]["cvssData"]["baseScore"]
     except (KeyError, IndexError):
         score = "N/A"
-    with open(f"../corpus/cve/{cve_id}.json", "w", encoding="utf-8") as f:
+    with open(f"./corpus/cve/{cve_id}.json", "w", encoding="utf-8") as f:
         json.dump(cve, f, indent=2)
 
 # https://owasp.org/Top10/2025/
@@ -92,7 +93,7 @@ for key, url in URLS.items():
     content = soup.find("article")
     text = f"# {key}\n# Sursa: {url}\n# Data accesarii: {today}\n\n"
     text += content.get_text(separator="\n", strip=True)
-    with open(f"../corpus/owasp/{key}.md", "w", encoding="utf-8") as f:
+    with open(f"./corpus/owasp/{key}.md", "w", encoding="utf-8") as f:
         f.write(text)
 
 # https://cwe.mitre.org/data/definitions/89.html
@@ -116,7 +117,7 @@ for key, url in cwe_URLS.items():
         if div:
             text += f"\n## {s}\n"
             text += div.get_text(separator="\n", strip=True)
-    with open(f"../corpus/cwe/{key}.md", "w", encoding="utf-8") as f:
+    with open(f"./corpus/cwe/{key}.md", "w", encoding="utf-8") as f:
         f.write(text)
 
 # https://docs.djangoproject.com/en/stable/topics/security/
@@ -134,7 +135,7 @@ for key, section_id in sectiuni.items():
     if content:
         text = f"# {key}\n# Sursa: {django_url}\n# Data accesarii: {today}\n\n"
         text += content.get_text(separator="\n", strip=True)
-        with open(f"../corpus/framework_docs/{key}.md", "w", encoding="utf-8") as f:
+        with open(f"./corpus/framework_docs/{key}.md", "w", encoding="utf-8") as f:
             f.write(text)
 
 # https://peps.python.org/pep-0008/
@@ -150,7 +151,7 @@ for key, url in style_guides.items():
     content = soup.find("main") or soup.find("article") or soup.find("body")
     text = f"# {key}\n# Sursa: {url}\n# Data accesarii: {today}\n\n"
     text += content.get_text(separator="\n", strip=True)
-    with open(f"../corpus/style_guides/{key}.md", "w", encoding="utf-8") as f:
+    with open(f"./corpus/style_guides/{key}.md", "w", encoding="utf-8") as f:
         f.write(text)
 
 # sources.md - documentatie pentru evaluare
@@ -182,14 +183,16 @@ lines.append("\n## Style guides\n")
 for key, url in style_guides.items():
     lines.append(f"- {key} | {url}\n")
 
-with open("../corpus/sources.md", "w", encoding="utf-8") as f:
+with open("./corpus/sources.md", "w", encoding="utf-8") as f:
     f.writelines(lines)
 
-documents = load_corpus("../corpus/")
-build_index(documents, persist_path="../vectorstore/")
+documents = load_corpus("./corpus/")
+print(f"Documente incarcate: {len(documents)}")
+build_index(documents, persist_path="vectorstore/")
+print("Vectorstore construit.")
 
 # initializeaza memoria episodica goala
-client = chromadb.PersistentClient(path="../memory/feedback_index/")
+client = chromadb.PersistentClient(path="./memory/feedback_index/")
 existing = [c.name for c in client.list_collections()]
 if "episodic_memory" not in existing:
     client.create_collection("episodic_memory")

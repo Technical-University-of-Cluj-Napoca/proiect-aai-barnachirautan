@@ -1,6 +1,6 @@
 # CWE-79_xss
 # Sursa: https://cwe.mitre.org/data/definitions/79.html
-# Data accesarii: 2026-05-30
+# Data accesarii: 2026-05-31
 
 ## Description
 Description

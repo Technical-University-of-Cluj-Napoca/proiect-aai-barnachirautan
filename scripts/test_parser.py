@@ -28,14 +28,14 @@ for url in repos:
     for f in repo_dto.files[:3]:
         print(f"  {f.file_path} | {f.language} | {f.lines_of_code} linii | {len(f.functions)} functii")
 
-    all_smells = []
+    all_dtos = []
     for file_dto in repo_dto.files:
-        smells, score = quality_agent.evaluate(file_dto)
-        all_smells.extend(smells)
-        if smells:
-            print(f"  {file_dto.file_path} | score: {score:.1f} | smells: {len(smells)}")
-    print(f"\nTotal smells: {len(all_smells)}")
-    generate_distribution(all_smells, f"logs/distribution_{url.split('/')[-1]}.png")  # per repo
+        dtos, score = quality_agent.evaluate(file_dto)
+        all_dtos.extend(dtos)
+        if dtos:
+            print(f"  {file_dto.file_path} | score: {score:.1f} | dtos: {len(dtos)}")
+    print(f"\nTotal dtos: {len(all_dtos)}")
+    generate_distribution(all_dtos, f"logs/distribution_{url.split('/')[-1]}.png")  # per repo
 
     with open("./data/review_exemplu.json", "w", encoding="utf-8") as out:
         json.dump(repo_dto.model_dump(), out, indent=2, ensure_ascii=False)

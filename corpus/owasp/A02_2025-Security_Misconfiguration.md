@@ -1,6 +1,6 @@
 # A02_2025-Security_Misconfiguration
 # Sursa: https://owasp.org/Top10/2025/A02_2025-Security_Misconfiguration/
-# Data accesarii: 2026-05-30
+# Data accesarii: 2026-05-31
 
 A02:2025 Security Misconfiguration
 Background.

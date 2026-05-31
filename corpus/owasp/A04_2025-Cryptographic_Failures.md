@@ -1,6 +1,6 @@
 # A04_2025-Cryptographic_Failures
 # Sursa: https://owasp.org/Top10/2025/A04_2025-Cryptographic_Failures/
-# Data accesarii: 2026-05-30
+# Data accesarii: 2026-05-31
 
 A04:2025 Cryptographic Failures
 Background.
