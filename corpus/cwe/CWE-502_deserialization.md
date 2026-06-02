@@ -1,6 +1,6 @@
 # CWE-502_deserialization
 # Sursa: https://cwe.mitre.org/data/definitions/502.html
-# Data accesarii: 2026-05-31
+# Data accesarii: 2026-06-02
 
 ## Description
 Description

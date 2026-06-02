@@ -1,6 +1,6 @@
 # pep8
 # Sursa: https://peps.python.org/pep-0008/
-# Data accesarii: 2026-05-31
+# Data accesarii: 2026-06-02
 
 PEP 8 – Style Guide for Python Code
 PEP 8 – Style Guide for Python Code
@@ -2377,7 +2377,3 @@ Typeshed repo
 https://github.com/python/typeshed
 Copyright
 This document has been placed in the public domain.
-Source:
-https://github.com/python/peps/blob/main/peps/pep-0008.rst
-Last modified:
-2025-04-04 00:19:04 GMT

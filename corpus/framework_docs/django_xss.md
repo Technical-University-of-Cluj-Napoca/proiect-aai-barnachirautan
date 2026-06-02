@@ -1,6 +1,6 @@
 # django_xss
 # Sursa: https://docs.djangoproject.com/en/stable/topics/security/
-# Data accesarii: 2026-05-31
+# Data accesarii: 2026-06-02
 
 Cross site scripting (XSS) protection
 ¶

@@ -135,12 +135,16 @@ def manipulate_dependency(deps : list[str], file_path: str, embeddings : OpenAIE
                     new_version = vuln_match.group(1)
                     if Version(version) < Version(new_version):
                         vulnerabilities.append(VulnerabilityDTO(
+                            id=f"DEP-{len(vulnerabilities):03d}",
                             issue_type=IssueType.DEPENDENCY_RISK,
                             title=f"Dependenta vulnerabila: {name}",
                             description=c["text"][:200],
                             severity=VulnerabilitySeverity.RIDICAT,
                             file_path=file_path,
+                            line_number=None,
+                            affected_snippet=None,
                             cve_id=c["source"].replace("nvd:", ""),
+                            owasp_category="A06:2021",
                             fix_suggestion=f"Actualizeaza {name} la >= {new_version}",
                             cited_source=c["source"],
                             coverage_empty=False

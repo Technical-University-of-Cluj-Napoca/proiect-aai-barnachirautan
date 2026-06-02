@@ -217,7 +217,13 @@ class CodeParserAgent:
     def parse(self, repo_url: str) -> RepositoryDTO:
         local_path = f"data/repos/{repo_url.split('/')[-1]}"
         if not Path(local_path).exists():
-            Repo.clone_from(repo_url, local_path, depth=1)
+            token = os.getenv("GITHUB_TOKEN")
+            if token and "github.com" in repo_url:
+                # injecteaza token-ul in URL pentru repo-uri private
+                clone_url = repo_url.replace("https://", f"https://{token}@")
+            else:
+                clone_url = repo_url
+            Repo.clone_from(clone_url, local_path, depth=1)
 
         repo_depFiles = []
         rel_files = []

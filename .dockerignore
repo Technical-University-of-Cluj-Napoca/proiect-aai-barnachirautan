@@ -1,0 +1,20 @@
+.env
+.venv
+.git
+.idea
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+
+# generate local, montate ca volume in docker
+vectorstore/
+memory/
+logs/
+data/repos/
+
+# nu sunt necesare in imagine
+notebooks/
+.langchain.db
+uv.lock
+.python-version
