@@ -26,6 +26,7 @@ def _ensure_memory_store():
 
 _ensure_memory_store()
 
+import src.graph.workflow as _wf
 from src.graph.workflow import (
     build_graph,
     WorkFlowState,
@@ -151,9 +152,8 @@ def _run_pipeline(
     memory_threshold: float,
     use_feedback: bool,
 ) -> dict:
-    """Ruleaza graful LangGraph si afiseaza progresul per nod."""
+    """Ruleaza graful LangGraph si afiseaza progresul per fisier in timp real."""
 
-    # Aplicam pragurile alese din UI pe singleton-urile agentilor
     security_agent.threshold = relevance_threshold
     _feedback_agent_singleton.memory_threshold = memory_threshold
 
@@ -172,28 +172,49 @@ def _run_pipeline(
         "iteration": 0,
     }
 
-    # Colectam starea acumulata din toate nodurile
     accumulated = dict(initial)
 
     with st.status("Analizez repository-ul...", expanded=True) as status:
-        for event in app.stream(initial):
-            for node_name, node_output in event.items():
-                label = NODE_LABELS.get(node_name, f"Procesare {node_name}...")
+        # --- bara de progres per fisier ---
+        progress_bar  = st.progress(0.0)
+        progress_text = st.empty()
 
-                # Mesaj mai specific dupa parse_repo
-                if node_name == "parse_repo" and node_output.get("repository"):
-                    n = len(node_output["repository"].files)
-                    label = f"Parsare completa: {n} fisiere detectate"
+        def _update_progress(current: int, total: int, stage: str, filename: str) -> None:
+            pct = current / total if total > 0 else 1.0
+            progress_bar.progress(pct)
+            progress_text.markdown(
+                f"**{stage}:** `{filename}` &nbsp;&nbsp; "
+                f"**{current} / {total}** fisiere"
+            )
 
-                # Mesaj mai specific dupa security_scan
-                if node_name == "security_scan":
-                    sec = node_output.get("security_map", {})
-                    total_v = sum(len(v) for v in sec.values())
-                    label = f"Scanare securitate: {total_v} potentiale vulnerabilitati"
+        # inregistram callback-ul in modul workflow (acelasi proces, acelasi thread)
+        _wf._ui_progress = _update_progress
 
-                status.update(label=label)
-                accumulated.update(node_output)
+        try:
+            for event in app.stream(initial):
+                for node_name, node_output in event.items():
+                    label = NODE_LABELS.get(node_name, f"Procesare {node_name}...")
 
+                    if node_name == "parse_repo" and node_output.get("repository"):
+                        n = len(node_output["repository"].files)
+                        label = f"Parsare completa: {n} fisiere detectate"
+                        # resetam bara dupa parsare — urmeaza scanarea
+                        progress_bar.progress(0.0)
+                        progress_text.empty()
+
+                    if node_name == "security_scan":
+                        sec = node_output.get("security_map", {})
+                        total_v = sum(len(v) for v in sec.values())
+                        label = f"Scanare securitate finalizata: {total_v} vulnerabilitati"
+
+                    status.update(label=label)
+                    accumulated.update(node_output)
+        finally:
+            # curatam callback-ul indiferent de rezultat
+            _wf._ui_progress = None
+
+        progress_bar.progress(1.0)
+        progress_text.markdown("**Toate fisierele au fost procesate.**")
         status.update(label="Analiza completa!", state="complete")
 
     return accumulated
@@ -397,7 +418,7 @@ def main() -> None:
 
         try:
             final_state = _run_pipeline(
-                repo_url, relevance_threshold, memory_threshold, use_feedback
+                repo_url, relevance_threshold, memory_threshold, use_feedback,
             )
             st.session_state.final_state = final_state
             st.session_state.report = final_state.get("report")

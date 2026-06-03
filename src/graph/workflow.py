@@ -22,6 +22,18 @@ logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
 MAX_ITER = 3
 
+# Callback setat din UI inainte de rularea pipeline-ului.
+# Sematura: _ui_progress(current: int, total: int, stage: str, filename: str)
+# Apelat dupa fiecare fisier procesat in nodurile care itereaza peste repo.
+_ui_progress = None
+
+def _report(current: int, total: int, stage: str, filename: str) -> None:
+    if _ui_progress is not None:
+        try:
+            _ui_progress(current, total, stage, filename)
+        except Exception:
+            pass
+
 parser_agent = CodeParserAgent()
 security_agent = RAGSecurityAgent()
 quality_agent = CodeQualityAgent()
@@ -49,10 +61,13 @@ def parse_repo(state: WorkFlowState) -> dict:
 def augment_with_memory(state: WorkFlowState) -> dict:
     start = time.time()
     feedback = {}
-    for f in state['repository'].files:
+    files = state['repository'].files
+    total = len(files)
+    for i, f in enumerate(files, 1):
         nota = feedback_agent.augment_context(f.content[:500])
         if nota:
             feedback[f.file_path] = nota
+        _report(i, total, "Recuperare feedback din memorie", os.path.basename(f.file_path))
     logger.info(f"[augment_with_memory] {len(feedback)} fisiere cu feedback in {time.time() - start:.2f}s")
     return {"feedback_context": feedback}
 
@@ -62,9 +77,12 @@ def security_scan(state: WorkFlowState) -> dict:
     # pentru a gasii solutia
     k = 5 + state['iteration'] * 2
     security_map = {}
-    for f in state['repository'].files:
+    files = state['repository'].files
+    total = len(files)
+    for i, f in enumerate(files, 1):
         vulns = security_agent.scan(f, k=k)
         security_map[f.file_path] = vulns
+        _report(i, total, "Scanare securitate", os.path.basename(f.file_path))
     total_vulns = sum(len(v) for v in security_map.values())
     logger.info(f"[security_scan] iteratia {state['iteration']} k={k} → {total_vulns} vulnerabilitati in {time.time() - start:.2f}s")
     return {"security_map": security_map, "iteration": state["iteration"] + 1}
@@ -73,9 +91,12 @@ def security_scan(state: WorkFlowState) -> dict:
 def quality_check(state: WorkFlowState) -> dict:
     start = time.time()
     quality_map = {}
-    for f in state["repository"].files:
+    files = state["repository"].files
+    total = len(files)
+    for i, f in enumerate(files, 1):
         dtos, score = quality_agent.evaluate(f)
         quality_map[f.file_path] = dtos
+        _report(i, total, "Evaluare calitate", os.path.basename(f.file_path))
     total_smells = sum(len(v) for v in quality_map.values())
     logger.info(f"[quality_check] {total_smells} code smells in {time.time() - start:.2f}s")
     return {"quality_map": quality_map}
