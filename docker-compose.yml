@@ -1,0 +1,21 @@
+services:
+  app:
+    build: .
+    ports:
+      - "8501:8501"
+    # Cheile API (OPENAI_API_KEY, NVD_API_KEY, GITHUB_TOKEN) vin din .env
+    # Nu le hardcodati in imagine — adaugati .env in .gitignore
+    env_file:
+      - .env
+    volumes:
+      # Vectorstore-ul principal (corpus de securitate indexat)
+      # Fara acest volum, build_index.py trebuie rulat la fiecare restart
+      - ./vectorstore:/app/vectorstore
+
+      # Memoria episodica a SelfImprovingFeedbackAgent
+      # Fara acest volum, tot feedbackul uman se pierde la docker compose up
+      - ./memory:/app/memory
+
+      # Rapoartele generate si log-urile de evaluare
+      - ./logs:/app/logs
+    restart: unless-stopped

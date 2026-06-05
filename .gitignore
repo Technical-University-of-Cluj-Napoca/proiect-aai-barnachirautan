@@ -1,0 +1,29 @@
+# Chei API — nu le commiteti niciodata
+.env
+
+# Directoare generate la runtime — montate ca volume Docker
+vectorstore/
+memory/
+logs/
+
+# Repo-uri clonate local de parser agent
+data/repos/
+
+# Cache Python — generate automat, nu au ce cauta in repo
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Mediu virtual
+.venv/
+
+# IDE
+.idea/
+
+# Jupyter
+notebooks/.ipynb_checkpoints/
+.ipynb_checkpoints/
+
+# LangChain cache local
+.langchain.db
