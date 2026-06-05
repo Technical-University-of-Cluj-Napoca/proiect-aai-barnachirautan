@@ -61,13 +61,24 @@ def parse_repo(state: WorkFlowState) -> dict:
 def augment_with_memory(state: WorkFlowState) -> dict:
     start = time.time()
     feedback = {}
-    files = state['repository'].files
-    total = len(files)
-    for i, f in enumerate(files, 1):
+    try:
+        count = feedback_agent.memory_collection.count()
+    except Exception:
+        # colectia a fost stearsa - recreaza
+        feedback_agent.memory_collection = feedback_agent.client.get_or_create_collection(
+            "episodic_memory",
+            metadata={"hnsw:space": "cosine"}
+        )
+        count = 0
+
+    if count == 0:
+        logger.info("[augment_with_memory] Memorie goala, sarind peste.")
+        return {"feedback_context": {}}
+
+    for f in state["repository"].files:
         nota = feedback_agent.augment_context(f.content[:500])
         if nota:
             feedback[f.file_path] = nota
-        _report(i, total, "Recuperare feedback din memorie", os.path.basename(f.file_path))
     logger.info(f"[augment_with_memory] {len(feedback)} fisiere cu feedback in {time.time() - start:.2f}s")
     return {"feedback_context": feedback}
 

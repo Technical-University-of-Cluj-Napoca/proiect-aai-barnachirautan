@@ -195,6 +195,9 @@ def _run_pipeline(
                 for node_name, node_output in event.items():
                     label = NODE_LABELS.get(node_name, f"Procesare {node_name}...")
 
+                    if node_output is None:
+                        continue
+
                     if node_name == "parse_repo" and node_output.get("repository"):
                         n = len(node_output["repository"].files)
                         label = f"Parsare completa: {n} fisiere detectate"
